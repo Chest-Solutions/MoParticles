@@ -1,0 +1,9 @@
+name: MoParticles
+version: '${version}'
+main: com.csl.moparticles.MoParticlesPlugin
+api-version: '1.21'
+authors: [RedSnicker]
+description: Moparticles Is A Minecraft plugin that parses **MoLang** (The Bedrock particle language),
+  bakes the result into a Java-edition compatible animation (Using Item displays), generates a
+  resource pack with the necessary textures, and plays the animation
+  client-side.
