@@ -24,9 +24,12 @@ import java.util.zip.ZipOutputStream;
 // Uses overlays to work with multiple versions
 public final class ResourcePackGenerator {
 
+    private static final int PACK_FORMAT_1194 = 13;
     private static final int PACK_FORMAT_1214 = 46;
     private static final int PACK_FORMAT_12111 = 75;
     private static final int PACK_FORMAT_2612 = 84;
+
+    private static final String OVERLAY_DIR = "overlay_46_84";
 
     private final MoParticlesPlugin plugin;
 
@@ -49,6 +52,8 @@ public final class ResourcePackGenerator {
             writePng(packDir.toPath().resolve("pack.png"), brandLogo());
 
             List<EffectModelEntry> entries = new ArrayList<>();
+            Path overlayDir = packDir.toPath().resolve(OVERLAY_DIR);
+
             for (ParticleDefinition def : plugin.getParticles().values()) {
                 String id = def.id();
                 int colon = id.indexOf(':');
@@ -62,17 +67,18 @@ public final class ResourcePackGenerator {
 
                 Path textureFile = packDir.toPath().resolve("assets/" + namespace + "/textures/item/particles/" + name + ".png");
                 Path modelFile = packDir.toPath().resolve("assets/" + namespace + "/models/item/particles/" + name + ".json");
-                Path itemFile = packDir.toPath().resolve("assets/" + namespace + "/items/particles/" + name + ".json");
+                Path overlayItemFile = overlayDir.resolve("assets/" + namespace + "/items/particles/" + name + ".json");
 
                 writePng(textureFile, tex);
                 writeString(modelFile, rawPlaneModel(namespace, name));
-                writeString(itemFile, directItemDefinition(modelPath));
+                writeString(overlayItemFile, directItemDefinition(modelPath));
 
                 entries.add(new EffectModelEntry(modelId, modelPath));
             }
 
             entries.sort(Comparator.comparingInt(e -> e.numericId));
-            writeString(packDir.toPath().resolve("assets/minecraft/items/paper.json"), paperDispatcher(entries));
+            writeString(packDir.toPath().resolve("assets/minecraft/models/item/paper.json"), legacyPaperModel(entries));
+            writeString(overlayDir.resolve("assets/minecraft/items/paper.json"), paperDispatcher(entries));
             writeString(packDir.toPath().resolve("assets/" + MoParticlesPlugin.NAMESPACE + "/sounds.json"), "{}\n");
             zipDirectory(packDir.toPath(), zipFile.toPath());
         } catch (IOException ex) {
@@ -86,12 +92,27 @@ public final class ResourcePackGenerator {
     private String packMcmeta() {
         return "{\n" +
                 "  \"pack\": {\n" +
-                "    \"pack_format\": " + PACK_FORMAT_1214 + ",\n" +
+                "    \"pack_format\": " + PACK_FORMAT_1194 + ",\n" +
                 "    \"supported_formats\": {\n" +
-                "      \"min_inclusive\": " + PACK_FORMAT_1214 + ",\n" +
+                "      \"min_inclusive\": " + PACK_FORMAT_1194 + ",\n" +
                 "      \"max_inclusive\": " + PACK_FORMAT_2612 + "\n" +
                 "    },\n" +
+                "    \"min_format\": " + PACK_FORMAT_1194 + ",\n" +
+                "    \"max_format\": " + PACK_FORMAT_2612 + ",\n" +
                 "    \"description\": \"MoParticles generated resource pack - RedSnicker / Chest Solutions\"\n" +
+                "  },\n" +
+                "  \"overlays\": {\n" +
+                "    \"entries\": [\n" +
+                "      {\n" +
+                "        \"directory\": \"" + OVERLAY_DIR + "\",\n" +
+                "        \"formats\": {\n" +
+                "          \"min_inclusive\": " + PACK_FORMAT_1214 + ",\n" +
+                "          \"max_inclusive\": " + PACK_FORMAT_2612 + "\n" +
+                "        },\n" +
+                "        \"min_format\": " + PACK_FORMAT_1214 + ",\n" +
+                "        \"max_format\": " + PACK_FORMAT_2612 + "\n" +
+                "      }\n" +
+                "    ]\n" +
                 "  }\n" +
                 "}\n";
     }
@@ -113,6 +134,25 @@ public final class ResourcePackGenerator {
                 "    }\n" +
                 "  ]\n" +
                 "}\n";
+    }
+
+    private String legacyPaperModel(List<EffectModelEntry> entries) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        sb.append("  \"parent\": \"minecraft:item/generated\",\n");
+        sb.append("  \"textures\": {\n");
+        sb.append("    \"layer0\": \"minecraft:item/paper\"\n");
+        sb.append("  },\n");
+        sb.append("  \"overrides\": [\n");
+        for (int i = 0; i < entries.size(); i++) {
+            EffectModelEntry entry = entries.get(i);
+            sb.append("    {\"predicate\": {\"custom_model_data\": ").append(entry.numericId).append("}, \"model\": \"").append(entry.rawModelPath).append("\"}");
+            if (i + 1 < entries.size()) sb.append(',');
+            sb.append('\n');
+        }
+        sb.append("  ]\n");
+        sb.append("}\n");
+        return sb.toString();
     }
 
     private String directItemDefinition(String rawModelPath) {

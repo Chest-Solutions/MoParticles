@@ -165,6 +165,10 @@ public final class MoParticlesPlugin extends JavaPlugin {
         return resourcePack;
     }
 
+    public static boolean isDebugMode() {
+        return instance != null && instance.getConfig().getBoolean("debug", false);
+    }
+
     private void saveBundledParticleIfMissing(String fileName) {
         File out = new File(new File(getDataFolder(), "particles"), fileName);
         if (!out.exists()) {

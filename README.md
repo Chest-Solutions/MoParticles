@@ -33,3 +33,64 @@ I bundled two effects from snowstorm & A custom made one using snowstorm into Mo
 
 Add your own by dropping more `.json` files into
 `plugins/MoParticles/particles/` and running `/moparticles reload`.
+
+# Using MoParticles in your plugin.
+
+### 1. Build settings
+First add the jar to your minecraft plugin.
+
+Gradle
+```groovy
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compileOnly 'com.github.Chest-Solutions:MoParticles:1.0.0'
+}
+```
+
+Maven
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.Chest-Solutions</groupId>
+        <artifactId>MoParticles</artifactId>
+        <version>1.0.0</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+### 2. Dependency
+Make sure to add MoParticles to your dependencies
+
+plugin.yml
+```yaml
+name: MyPlugin
+version: 1.0
+main: com.example.plugin.MyPlugin
+depend: [MoParticles] 
+```
+
+### 3. Usage
+
+Here's a simple example of playing a particle.
+```java
+MoParticleAPI api = MoParticleAPI.get();
+String effectName = "fire";
+Location targetLocation = player.getLocation();
+
+if (api.hasEffect(effectName)) { // Safety check
+    UUID animationId = api.play(effectName, targetLocation, 10.0); // Play it
+    
+    api.stop(animationId); // Stop it
+}
+```
