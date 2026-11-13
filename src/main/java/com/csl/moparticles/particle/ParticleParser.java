@@ -17,15 +17,18 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /** Parses Bedrock particle JSON into a baked definition. */
 public final class ParticleParser {
 
     private final MolangEngine molang;
+    private final Logger logger;
 
-    public ParticleParser(MolangEngine molang) {
+    public ParticleParser(MolangEngine molang, Logger logger) {
         this.molang = molang;
+        this.logger = logger;
     }
 
     public int parseDirectory(File dir, Map<String, ParticleDefinition> out) {
@@ -47,13 +50,11 @@ public final class ParticleParser {
                         loaded++;
                     }
                 } catch (Exception ex) {
-                    System.err.println("[moparticles] failed to parse " + path + " : " + ex);
-                    ex.printStackTrace();
+                    logger.warning("failed to parse " + path + " : " + ex);
                 }
             }
         } catch (Exception ex) {
-            System.err.println("[moparticles] failed to walk particle directory " + dir + " : " + ex);
-            ex.printStackTrace();
+            logger.warning("failed to walk particle directory " + dir + " : " + ex);
         }
         return loaded;
     }
@@ -112,8 +113,7 @@ public final class ParticleParser {
         sim.bake();
 
         return new ParticleDefinition(b.id, b.namespace(), b.material, b.texture,
-                b.duration, b.fps, b.totalFrames,
-                b.frames, b.javaParticles, b.hasCustomTexture, b.textureRows);
+                b.duration, b.fps, b.totalFrames, b.frames);
     }
 
     static String optString(JsonObject o, String key, String def) {

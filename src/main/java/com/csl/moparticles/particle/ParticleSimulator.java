@@ -4,7 +4,6 @@ import com.csl.moparticles.molang.MolangEngine;
 import com.csl.moparticles.molang.MolangEngine.Scope;
 import com.google.gson.JsonObject;
 import org.bukkit.Color;
-import org.bukkit.Material;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,8 +72,6 @@ public final class ParticleSimulator {
         double totalSeconds = Math.max(0.05, emitterLifetime);
         out.duration = totalSeconds;
         out.fps = fps;
-
-        appearance.resolveJavaParticles(out);
 
         List<LiveParticle> live = new ArrayList<>();
         int nextParticleId = 0;
@@ -266,11 +263,8 @@ public final class ParticleSimulator {
         public ParticleDefinition.BakedParticle snapshot() {
             return new ParticleDefinition.BakedParticle(
                     id,
-                    x, y, z, vx, vy, vz,
-                    colour, sizeX, sizeY,
-                    0, 0, 1, 1,
-                    false, false, false,
-                    Material.STONE, null
+                    x, y, z,
+                    colour, sizeX, sizeY
             );
         }
     }

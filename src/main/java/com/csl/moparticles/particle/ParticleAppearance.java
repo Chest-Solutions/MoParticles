@@ -2,13 +2,10 @@ package com.csl.moparticles.particle;
 
 import com.csl.moparticles.molang.MolangEngine;
 import com.csl.moparticles.molang.MolangEngine.Scope;
-import com.csl.moparticles.particle.ParticleDefinition.BakedParticle;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.bukkit.Color;
-import org.bukkit.Material;
-import org.bukkit.Particle;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -195,13 +192,6 @@ public final class ParticleAppearance {
         );
     }
 
-    public void resolveJavaParticles(ParticleDefinition.Builder out) {
-        out.javaParticles.add(Particle.DUST);
-        out.javaParticles.add(Particle.ENTITY_EFFECT);
-        out.javaParticles.add(Particle.EFFECT);
-        out.hasCustomTexture = true;
-    }
-
     public Color evalColour(Scope s, MolangEngine m) {
         return switch (tintMode) {
             case FIXED -> fixedColor == null ? Color.WHITE : fixedColor;
@@ -228,12 +218,6 @@ public final class ParticleAppearance {
             p.rotation = m.eval(rotation, s).value;
             p.rotationRate = m.eval(rotationRate, s).value;
         } catch (Exception ignored) { }
-    }
-
-    public BakedParticle snapshot(ParticleSimulator.LiveParticle p) {
-        return new BakedParticle(p.id, p.x, p.y, p.z, p.vx, p.vy, p.vz,
-                p.colour, p.sizeX, p.sizeY, 0, 0, 1, 1,
-                true, false, false, Material.STONE, null);
     }
 
     private Color evalExpressionColour(Scope s, MolangEngine m) {

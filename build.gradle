@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.csl'
-version = '1.0'
+version = '2.0.0'
 
 repositories {
     mavenCentral()
@@ -13,15 +13,22 @@ repositories {
         name = "papermc-repo"
         url = "https://repo.papermc.io/repository/maven-public/"
     }
+    // PacketEvents releases
     maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
     maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
+    // Compile against the oldest Paper API we support; the plugin then runs on
+    // 1.21.x servers as well as the latest 26.x releases.
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 
-    implementation("org.incendo:cloud-paper:2.0.0")
-    implementation("org.incendo:cloud-annotations:2.0.0")
+    // Protocol library - encodes our packets correctly for every client version
+    // from 1.21.5 up to 26.3 (PacketEvents 2.14.0).
+    implementation("com.github.retrooper:packetevents-spigot:2.14.0")
+
+    implementation("org.incendo:cloud-paper:2.0.1")
+    implementation("org.incendo:cloud-annotations:2.1.0")
 }
 
 def targetJavaVersion = 21
@@ -53,10 +60,9 @@ processResources {
 
 tasks {
     runServer {
-        // Configure the Minecraft version for our task.
-        // This is the only required configuration besides applying the plugin.
-        // Your plugin's jar (or shadowJar if present) will be used automatically.
-        minecraftVersion("1.21.11")
+        // Target the latest Minecraft release (2026 year-based versioning).
+        // The plugin itself still supports every version from 1.21.5 upwards.
+        minecraftVersion("26.3")
     }
     jar {
         manifest {
@@ -65,16 +71,24 @@ tasks {
         }
     }
     shadowJar {
+        archiveClassifier = 'all'
+        mergeServiceFiles()
+        // Relocate PacketEvents so our shaded copy never collides with a
+        // standalone packetevents plugin that may already be on the server.
+        relocate('com.github.retrooper', 'com.csl.moparticles.libs.packetevents.com.github.retrooper')
+        relocate('io.github.retrooper', 'com.csl.moparticles.libs.packetevents.io.github.retrooper')
         manifest {
             attributes["paperweight-mappings-namespace"] = "mojang"
         }
     }
 }
 
+// Rewrites the shaded jar manifest so Paper does not complain about
+// multi-release class files pulled in by bundled dependencies.
 def postProcessManifest = tasks.register('postProcessManifest') {
     dependsOn 'shadowJar'
     doLast {
-        def jarFile = file("build/libs/MoParticles-1.0-all.jar")
+        def jarFile = tasks.getByName('shadowJar').archiveFile.get().asFile
         if (!jarFile.exists()) return
 
         def tmp = new File(jarFile.parent, jarFile.name + ".tmp")
